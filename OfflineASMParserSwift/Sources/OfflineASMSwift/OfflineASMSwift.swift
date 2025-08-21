@@ -3,6 +3,8 @@ import ArgumentParser
 @main
 struct OfflineASM: ParsableCommand {
   @Argument(help: "TODO")
+  public var input: String
+  @Argument(help: "TODO")
   public var offsetExtractor: String
   @Argument(help: "TODO")
   public var output: String
@@ -12,6 +14,6 @@ struct OfflineASM: ParsableCommand {
   public var binary_format: String?
 
   public func run() throws {
-    print("Generate asm: ", self.output)
+    print("Generate swift: ", self.output)
   }
 }
