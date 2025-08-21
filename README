@@ -16,7 +16,7 @@ ruby OfflineASMRB/generate_settings_extractor.rb -ICpp/ Asm/test.asm build/LLInt
 clang++ Cpp/LLIntSettingsExtractor.cpp -o build/LLIntSettingsExtractor_arm64 &&
 ruby OfflineASMRB/generate_offset_extractor.rb -ICpp/ Asm/test.asm build/LLIntSettingsExtractor build/LLIntDesiredOffsets.h arm64 arm64 &&
 clang++ Cpp/LLIntOffsetsExtractor.cpp -o build/LLIntOffsetsExtractor_arm64 &&
-(cd OfflineASMSwiftParserSwift && swift run OfflineASMSwift Asm/test.asm build/LLIntOffsetsExtractor build/LLIntAssembly.swift arm64 --binary-format=ELF ) &&
+ruby OfflineASMRBToSwift/asm.rb -ICpp/ Asm/test.asm build/LLIntOffsetsExtractor build/test.swift arm64 --binary-format=ELF &&
 (cd OfflineASMSwift && swift run OfflineASMSwift Asm/test.asm build/LLIntOffsetsExtractor build/LLIntAssembly.h arm64 --binary-format=ELF ) &&
 clang++ Cpp/test.cc Cpp/LowLevelInterpreter.cpp -o build/test &&
 ./build/test
