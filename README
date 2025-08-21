@@ -1,0 +1,10 @@
+Standard build
+
+rm -rf build/* &&
+ruby generate_settings_extractor.rb -ICpp/ Asm/test.asm build/LLIntDesiredSettings.h arm64 &&
+clang++ Cpp/LLIntSettingsExtractor.cpp -o build/LLIntSettingsExtractor_arm64 &&
+ruby generate_offset_extractor.rb -ICpp/ Asm/test.asm build/LLIntSettingsExtractor build/LLIntDesiredOffsets.h arm64 arm64 &&
+clang++ Cpp/LLIntOffsetsExtractor.cpp -o build/LLIntOffsetsExtractor_arm64 &&
+ruby asm.rb -ICpp/ Asm/test.asm build/LLIntOffsetsExtractor build/LLIntAssembly.h arm64 --binary-format=ELF &&
+clang++ Cpp/test.cc Cpp/LowLevelInterpreter.cpp -o build/test &&
+./build/test
