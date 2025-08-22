@@ -206,7 +206,7 @@ class Immediate < NoChildren
     def initialize(codeOrigin, value)
         super(codeOrigin)
         @value = value
-        raise "Bad immediate value #{value.inspect} at #{codeOriginString}" unless value.is_a? Integer
+        raise "Bad immediate value #{value.inspect} at #{codeOriginString}" unless value.is_a? String
     end
     
     def dump
@@ -1644,4 +1644,3 @@ class MacroCall < Node
         "\t#{originalName}(" + operands.collect{|v| v.dump}.join(", ") + ")"
     end
 end
-

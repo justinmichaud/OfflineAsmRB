@@ -143,6 +143,12 @@ class Token
     end
 end
 
+class Comment < Token
+    def initialize(codeOrigin, string)
+        super(codeOrigin, string)
+    end
+end
+
 class Annotation
     attr_reader :codeOrigin, :type, :string
     def initialize(codeOrigin, type, string)
@@ -165,6 +171,7 @@ def lex(str, file)
         case str
         when /\A\#([^\n]*)/
             # ASM style single line comment, ignore
+            result << Comment.new(CodeOrigin.new(file, lineNumber), $&)
         when /\A\/\*(\*(?!\/)|[^*])*\*\//
             # C-style block comment, ignore
             whitespaceFound = true
@@ -175,11 +182,12 @@ def lex(str, file)
                 case comment
                 when /\n/
                     lineNumber += 1
-                    comment = $~.post_match
+                    comment += $~.post_match
                 else
                     done = true
                 end
             end
+            result << Comment.new(CodeOrigin.new(file, lineNumber), comment)
             next
         when /\A\/\/\ ?([^\n]*)/
             # annotation
@@ -210,9 +218,9 @@ def lex(str, file)
             str = $~.post_match
             next
         when /\A0x([0-9a-fA-F]+)/
-            result << Token.new(CodeOrigin.new(file, lineNumber), $&.hex.to_s)
+            result << Token.new(CodeOrigin.new(file, lineNumber), $&.to_s)
         when /\A0([0-7]+)/
-            result << Token.new(CodeOrigin.new(file, lineNumber), $&.oct.to_s)
+            result << Token.new(CodeOrigin.new(file, lineNumber), $&.to_s)
         when /\A([0-9]+)/
             result << Token.new(CodeOrigin.new(file, lineNumber), $&)
         when /\A::/
@@ -440,7 +448,7 @@ class Parser
                 parseError unless @tokens[@idx] == ","
                 @idx += 1
                 if ["1", "2", "4", "8"].member? @tokens[@idx].string
-                    c = Immediate.new(codeOrigin, @tokens[@idx].string.to_i)
+                    c = Immediate.new(codeOrigin, @tokens[@idx].string)
                     @idx += 1
                 elsif @tokens[@idx] == "constexpr"
                     c = parseConstExpr
@@ -511,7 +519,7 @@ class Parser
             @idx += 1
             result
         elsif isInteger @tokens[@idx]
-            result = Immediate.new(@tokens[@idx].codeOrigin, @tokens[@idx].string.to_i)
+            result = Immediate.new(@tokens[@idx].codeOrigin, @tokens[@idx].string)
             @idx += 1
             result
         elsif isString @tokens[@idx]
@@ -660,7 +668,10 @@ class Parser
         firstCodeOrigin = @tokens[@idx].codeOrigin
         list = []
         loop {
-            if @tokens[@idx].is_a? Annotation
+            if @tokens[@idx].is_a? Comment
+              list << @tokens[@idx]
+              @idx += 1
+            elsif @tokens[@idx].is_a? Annotation
                 # This is the only place where we can encounter a global
                 # annotation, and hence need to be able to distinguish between
                 # them.
@@ -978,4 +989,3 @@ def parseHash(fileName, options)
     fileList.flatten!
     fileListHash(fileList)
 end
-

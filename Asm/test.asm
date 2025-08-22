@@ -96,9 +96,6 @@ const StackAlignment = constexpr (stackAlignmentBytes())
 const StackAlignmentSlots = constexpr (stackAlignmentRegisters())
 const StackAlignmentMask = StackAlignment - 1
 
-const PtrSize = constexpr (sizeof(void*))
-const SlotSize = constexpr (sizeof(Register))
-
 # amount of memory a local takes up on the stack (16 bytes for a v128)
 const V128ISize = 16
 const LocalSize = V128ISize
@@ -120,8 +117,7 @@ const UnboxedWasmCalleeStackSlot = CallerFrame - constexpr Wasm::numberOfIPIntCa
 
 
 const IPIntCalleeSaveSpaceAsVirtualRegisters = constexpr Wasm::numberOfIPIntCalleeSaveRegisters + constexpr Wasm::numberOfIPIntInternalRegisters
-const IPIntCalleeSaveSpaceStackAligned = (IPIntCalleeSaveSpaceAsVirtualRegisters * SlotSize + StackAlignment - 1) & ~StackAlignmentMask
-const IPIntCalleeSaveSpaceStackAligned = 2*IPIntCalleeSaveSpaceStackAligned
+const IPIntCalleeSaveSpaceStackAligned = 2 * ((IPIntCalleeSaveSpaceAsVirtualRegisters * SlotSize + StackAlignment - 1) & ~StackAlignmentMask)
 
 macro preserveCallerPCAndCFR()
     if C_LOOP or ARMv7
@@ -217,6 +213,17 @@ macro op(l, fn)
     end)
 end
 
+macro doTest()
+    addp 0x1337, wa0
+    move 0x21, wa1
+    call _call_test
+    bpeq r0, (0x42211337 + 5), .success
+    break
+    break
+    break
+.success:
+end
+
 op(ipint_entry, macro()
 if (ARM64 or ARM64E or X86_64 or ARMv7)
     preserveCallerPCAndCFR()
@@ -229,17 +236,6 @@ else
     break
 end
 end)
-
-macro doTest()
-    addp 0x1337, wa0
-    move 0x21, wa1
-    call _call_test
-    bpeq r0, (0x42211337 + 5), .success
-    break
-    break
-    break
-.success:
-end
 
 global _ipint_trampoline
 _ipint_trampoline:
